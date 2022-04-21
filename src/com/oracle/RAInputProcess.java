@@ -16,51 +16,24 @@ public class RAInputProcess {
                         AppGlobalSettings.workingDirectory +
                                 AppGlobalSettings.inputFile1);
 
-/*
-        System.out.println("Results of importing Input1 file:");
-        for (ContactItem iArray : raArray) {
-            iArray.println();
-        }
-*/
-
         // Read existing partner contact data from MySQL database
         ContactItem[] ciArray = ContactItem.readCIArrayFromDB(globalSettings);
 
-/*
-        System.out.println("Results of importing Contacts data from MySQL:");
-        for (ContactItem iArray : ciArray) {
-            iArray.println();
-        }
-*/
         // Read existing event list from MySQL database
         EventItem[] eventArray = EventItem.ReadEventListFromDB();
 
-/*
-        System.out.println("Results of importing Events data from MySQL:");
-        for(EventItem iArray : eventArray)
-            iArray.println();
-*/
         // Read existing registration and attendance data from MySQL database
         RegAttDB[] raDB = RegAttDB.readRADBfromMySQL(globalSettings);
 
-/*
-        System.out.println("Results of importing registration and attendance data from MySQL:");
-        if(raDB != null)
-            for(RegAttDB iArray : raDB)
-                iArray.println();
-        else
-            System.out.println("raDB is empty!");
-*/
         // Define free index set for ciArray: nextIDAfterMax & availableIDsArray[]
         int nextIDAfterMax = 0;
         int[] availableIDsArray = null;
 
         if(ciArray != null){
-            int n = ciArray.length;
 
-            for(int i = 0; i < n; i++)
-                if(ciArray[i].getId() > nextIDAfterMax){
-                    nextIDAfterMax = ciArray[i].getId();
+            for (ContactItem contactItem : ciArray)
+                if (contactItem.getId() > nextIDAfterMax) {
+                    nextIDAfterMax = contactItem.getId();
                 }
             nextIDAfterMax++;
 
@@ -92,11 +65,10 @@ public class RAInputProcess {
         int[] availableRAIndexArray = null;
 
         if(raDB != null){
-            int n = raDB.length;
 
-            for(int i = 0; i < n; i++)
-                if(raDB[i].getValueByIndex(0) > nextRAAfterMax){
-                    nextRAAfterMax = raDB[i].getValueByIndex(0);
+            for (RegAttDB regAttDB : raDB)
+                if (regAttDB.getValueByIndex(0) > nextRAAfterMax) {
+                    nextRAAfterMax = regAttDB.getValueByIndex(0);
                 }
             nextRAAfterMax++;
 
@@ -200,31 +172,8 @@ public class RAInputProcess {
         } else
             System.out.println("New partner's employees registered & participated: 0");
 
-/*
-        System.out.println("Results of assigning IDs to raArray:");
-        for (ContactItem iArray : raArray) {
-            iArray.println();
-        }
-*/
-
-/*
-        System.out.println("New contact items from raArray:");
-        for (ContactItem iArray : ciInputArray) {
-            iArray.println();
-        }
-*/
         // Write new contact items to MySQL database
         ContactItem.writeCIArrayToDB(ciInputArray, globalSettings);
-
-/*
-        // Write new contact items to file outputFile1
-        if(ciInputArray != null) {
-            ContactItem.exportCIArrayToCSVfile(AppGlobalSettings.workingDirectory +
-                    AppGlobalSettings.outputFile1, ciInputArray);
-        } else {
-            System.out.println("There is no any new contacts in the input file, nothing to export!");
-        }
- */
 
         // Add existing and new contacts to ciNewArray
         ContactItem[] ciNewArray;
@@ -252,13 +201,13 @@ public class RAInputProcess {
         for(int i = 0; i < raArray.length; i++) {
             if(raArray[i].getEventID() == 0) continue;
             boolean raFound = false;
-            for(int j = 0; j < raDB.length; j++) {
-                if((raArray[i].getEventID() == raDB[j].getValueByHeader("fk_event_id")) & (raArray[i].getId() == raDB[j].getValueByHeader("fk_id"))) {
+            for (RegAttDB regAttDB : raDB) {
+                if ((raArray[i].getEventID() == regAttDB.getValueByHeader("fk_event_id")) & (raArray[i].getId() == regAttDB.getValueByHeader("fk_id"))) {
                     raFound = true;
-                    raArray[i].setRegID(raDB[j].getValueByHeader("attendance_id"));
-                    if(raArray[i].getRegistration() != 0) {
-                        if(raArray[i].getAttendance() != raDB[j].getValueByHeader("attendance_status")){
-                            raArray[i].setAttendance(raDB[j].getValueByHeader("attendance_status"));
+                    raArray[i].setRegID(regAttDB.getValueByHeader("attendance_id"));
+                    if (raArray[i].getRegistration() != 0) {
+                        if (raArray[i].getAttendance() != regAttDB.getValueByHeader("attendance_status")) {
+                            raArray[i].setAttendance(regAttDB.getValueByHeader("attendance_status"));
                             raUpdArr.add(raArray[i]);
                         }
                     } else {
@@ -372,7 +321,6 @@ public class RAInputProcess {
                     System.out.println("Warning: no registration & attendance info connected with this contact");
                     ciInputArray[i].println();
                     raNewArray[i] = new RegistrationAttendance(0, 0, ciInputArray[i], 0, 0);
-                    continue;
                 } else
                     raNewArray[i] = new RegistrationAttendance(raDB[regAttIndex].getValueByIndex(0), raDB[regAttIndex].getValueByIndex(1),
                             ciInputArray[i], raDB[regAttIndex].getValueByIndex(3), raDB[regAttIndex].getValueByIndex(4));
@@ -395,10 +343,10 @@ public class RAInputProcess {
             PartnersRegistered[i] = 0;
             PartnersParticipated[i] = 0;
             int eventID = eventArray[i].getEventID();
-            for(int j = 0; j < raDB.length; j++) {
-                if(raDB[j].getValueByHeader("fk_event_id") == eventID){
-                    PartnersRegistered[i] += raDB[j].getValueByHeader("registration_status");
-                    PartnersParticipated[i] += raDB[j].getValueByHeader("attendance_status");
+            for (RegAttDB regAttDB : raDB) {
+                if (regAttDB.getValueByHeader("fk_event_id") == eventID) {
+                    PartnersRegistered[i] += regAttDB.getValueByHeader("registration_status");
+                    PartnersParticipated[i] += regAttDB.getValueByHeader("attendance_status");
                 }
             }
             System.out.println("EventID:\t" + eventID + "\tPartners Registered:\t" +
@@ -408,11 +356,11 @@ public class RAInputProcess {
         // Calculate number of unique attendees
 
         int[] PartnersAttendeeList = new int[ciNewArray.length];
-        for(int j = 0; j < raDB.length; j++)
-            if(raDB[j].getValueByHeader("attendance_status") == 1) {
-                int ciID = raDB[j].getValueByHeader("fk_id");
-                for(int i = 0; i < ciNewArray.length; i++){
-                    if(ciNewArray[i].getId() == ciID) {
+        for (RegAttDB regAttDB : raDB)
+            if (regAttDB.getValueByHeader("attendance_status") == 1) {
+                int ciID = regAttDB.getValueByHeader("fk_id");
+                for (int i = 0; i < ciNewArray.length; i++) {
+                    if (ciNewArray[i].getId() == ciID) {
                         PartnersAttendeeList[i]++;
                         break;
                     }
@@ -420,8 +368,8 @@ public class RAInputProcess {
             }
 
         int AttendeeCounter = 0;
-        for(int i = 0; i < PartnersAttendeeList.length; i++)
-            if(PartnersAttendeeList[i] > 0)
+        for (int k : PartnersAttendeeList)
+            if (k > 0)
                 AttendeeCounter++;
 
         System.out.println("Total number of unique attendees: " + AttendeeCounter);
@@ -437,8 +385,8 @@ public class RAInputProcess {
             }
 
         int maxEventsVisitedCounter = 0;
-        for(int i = 0; i < PartnersAttendeeList.length; i++)
-            if(PartnersAttendeeList[i] == maxEventsVisited)
+        for (int j : PartnersAttendeeList)
+            if (j == maxEventsVisited)
                 maxEventsVisitedCounter++;
 
         System.out.println("Maximum number of events, visited by single person: " + maxEventsVisited);
