@@ -84,19 +84,24 @@ public class RegistrationAttendance extends ContactItem {
 
     @Override
     public void println(){
-        String str = "" + this.regID;
-        for(int j = 0; j < AppGlobalSettings.numberOfColumns-1; j++)
-            str = str + " " + this.getValueByIndex(j);
-        str = str + this.registration + this.attendance;
+        StringBuilder str = new StringBuilder(this.regID);
+        for(int j = 0; j < AppGlobalSettings.numberOfColumns-1; j++) {
+            str.append(" ");
+            str.append(this.getValueByIndex(j));
+        }
+        str.append(this.registration);
+        str.append(this.attendance);
         System.out.println("id = " + this.getId() + "," + str);
     }
 
     @Override
     public void print(){
-        String str = "" + this.regID;
-        for(int j = 0; j < AppGlobalSettings.numberOfColumns-1; j++)
-            str = str + " " + this.getValueByIndex(j);
-        str = str + this.registration + this.attendance;
+        StringBuilder str = new StringBuilder(this.regID);
+        for(int j = 0; j < AppGlobalSettings.numberOfColumns-1; j++) {
+            str.append(" "); str.append(this.getValueByIndex(j));
+        }
+        str.append(this.registration);
+        str.append(this.attendance);
         System.out.print("id = " + this.getId() + "," + str);
     }
 
@@ -129,7 +134,7 @@ public class RegistrationAttendance extends ContactItem {
 
                     // Parsing current string from Input1 file
                     str = fileContent.substring(startPosition, k-1);
-                    int semicolonPosition[] = new int[n - 1];
+                    int[] semicolonPosition = new int[n - 1];
                     int count = 0;
                     for(int m = 0; m < str.length(); m++)
                         if(str.charAt(m) == AppGlobalSettings.excelCSVSeparator) {
@@ -149,14 +154,14 @@ public class RegistrationAttendance extends ContactItem {
                         try {
                             raItem.setEventID(Integer.parseInt(str.substring(0, semicolonPosition[0])));
                         } catch (NumberFormatException e){
-                            System.out.println("Error in Input1 fileformat, string #" + iCI + "position #1 (event_id)");
+                            System.out.println("Error in Input1 file format, string #" + iCI + "position #1 (event_id)");
                             return null;
                         }
 
                         try {
                             raItem.setAttendance(Integer.parseInt(str.substring(semicolonPosition[n-2]+1)));
                         } catch(NumberFormatException e){
-                            System.out.println("Error in Input1 fileformat, string #" + iCI + "position #20 (attendance)");
+                            System.out.println("Error in Input1 file format, string #" + iCI + "position #20 (attendance)");
                             return null;
                         }
 
@@ -164,7 +169,7 @@ public class RegistrationAttendance extends ContactItem {
                             raItem.setRegistration(
                                     Integer.parseInt(str.substring(semicolonPosition[n-3]+1, semicolonPosition[n-2])));
                         } catch(NumberFormatException e){
-                            System.out.println("Error in Input1 fileformat, string #" + iCI + "position #19 (registration)");
+                            System.out.println("Error in Input1 file format, string #" + iCI + "position #19 (registration)");
                             return null;
                         }
                     } else {
@@ -197,9 +202,14 @@ public class RegistrationAttendance extends ContactItem {
         raIA.remove(0);
 
         // Copy all Registration and Attendance info in the array and return it
-        RegistrationAttendance raInputArray[] = new RegistrationAttendance[raIA.size()];
-        raIA.toArray(raInputArray);
-        return raInputArray;
+        if(raIA.size() > 0) {
+            RegistrationAttendance[] raInputArray = new RegistrationAttendance[raIA.size()];
+            raIA.toArray(raInputArray);
+            return raInputArray;
+        } else {
+            throw new RuntimeException("There is no any data in the registration and attendance CSV file. " +
+                    "Program terminated");
+        }
 
     }
 
@@ -214,28 +224,31 @@ public class RegistrationAttendance extends ContactItem {
 
         try (FileWriter fw = new FileWriter(csvFileName)) {
 
-            String str;
+            StringBuilder str = new StringBuilder();
             // char separator = AppGlobalSettings.excelCSVSeparator;
             char separator = '\t';
             //char eoString = AppGlobalSettings.excelCSVEol2;
             char eoString = '\n';
 
             for (int j = 0; j < regAtt.length; j++) {
-                str = Integer.toString(regAtt[j].getEventID()) + separator;
-                str = str + Integer.toString(regAtt[j].getId()) + separator;
+                str.append(regAtt[j].getEventID());
+                str.append(separator);
+                str.append(regAtt[j].getId());
+                str.append(separator);
                 for(int i = 0; i < AppGlobalSettings.numberOfColumns-1; i++){
-                    str = str + regAtt[j].getValueByIndex(i) + separator;
+                    str.append(regAtt[j].getValueByIndex(i));
+                    str.append(separator);
                 }
-                str = str + Integer.toString(regAtt[j].getRegistration()) + separator;
+                str.append(regAtt[j].getRegistration());
+                str.append(separator);
                 if(j == regAtt.length - 1) {
-                    str = str + Integer.toString(regAtt[j].getAttendance());
+                    str.append(regAtt[j].getAttendance());
                 } else {
-                    str = str + Integer.toString(regAtt[j].getAttendance()) + eoString;
+                    str.append(regAtt[j].getAttendance());
+                    str.append(eoString);
                 }
-                fw.write(str);
+                fw.write(str.toString());
             }
-
-            fw.close();
 
         } catch (IOException e) {
             e.printStackTrace();

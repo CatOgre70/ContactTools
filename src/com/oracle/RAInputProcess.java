@@ -29,7 +29,7 @@ public class RAInputProcess {
         int nextIDAfterMax = 0;
         int[] availableIDsArray = null;
 
-        if(ciArray != null){
+        if(ciArray.length > 0){
 
             for (ContactItem contactItem : ciArray)
                 if (contactItem.getId() > nextIDAfterMax) {
@@ -46,6 +46,7 @@ public class RAInputProcess {
                     for (ContactItem ciArray1 : ciArray) {
                         if (ciArray1.getId() == j) {
                             jIDExist = true;
+                            break;
                         }
                     }
                     if(!jIDExist) {
@@ -64,7 +65,7 @@ public class RAInputProcess {
         int nextRAAfterMax = 0;
         int[] availableRAIndexArray = null;
 
-        if(raDB != null){
+        if(raDB.length > 0){
 
             for (RegAttDB regAttDB : raDB)
                 if (regAttDB.getValueByIndex(0) > nextRAAfterMax) {
@@ -101,7 +102,7 @@ public class RAInputProcess {
 
         ArrayList<Integer> newCIindexes = new ArrayList<>();
 
-        if(ciArray != null){
+        if(ciArray.length > 0){
             for(int i = 0; i < raArray.length; i++) {
                 String s1 = raArray[i].getValueByHeader("email");
                 s1 = s1.toLowerCase();
