@@ -51,7 +51,7 @@ public class RAInputProcess {
         else
             System.out.println("raDB is empty!");
 */
-        // Define free index set for ciArray: nextIDAfreMax & availableIDsArray[]
+        // Define free index set for ciArray: nextIDAfterMax & availableIDsArray[]
         int nextIDAfterMax = 0;
         int[] availableIDsArray = null;
 

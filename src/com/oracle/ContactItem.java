@@ -8,9 +8,9 @@ import java.util.ArrayList;
 
 public class ContactItem {
 
-    private String headers[];
+    private String[] headers;
     private int id;
-    private String values[];
+    private String[] values;
 
     ContactItem(){
         int n = AppGlobalSettings.numberOfColumns;
@@ -81,16 +81,20 @@ public class ContactItem {
     }
 
     public void println(){
-        String str = "";
-        for(int j = 0; j < AppGlobalSettings.numberOfColumns-1; j++)
-            str = str + " " + this.values[j];
+        StringBuilder str = new StringBuilder();
+        for(int j = 0; j < AppGlobalSettings.numberOfColumns-1; j++) {
+            str.append(" ");
+            str.append(this.values[j]);
+        }
         System.out.println("id = " + this.id + "," + str);
     }
 
-    public void print(){
-        String str = "";
-        for(int j = 0; j < AppGlobalSettings.numberOfColumns-1; j++)
-            str = str + " " + this.values[j];
+    public void print() {
+        StringBuilder str = new StringBuilder();
+        for (int j = 0; j < AppGlobalSettings.numberOfColumns - 1; j++) {
+            str.append(" ");
+            str.append(this.values[j]);
+        }
         System.out.print("id = " + this.id + "," + str);
     }
 
@@ -226,17 +230,22 @@ public class ContactItem {
 
         // Construct the query for MySQL
         String Query = "select ";
-        int n = globalSettings.numberOfColumns;
+        int n = AppGlobalSettings.numberOfColumns;
+        StringBuilder str = new StringBuilder();
 
-        for(int i = 0; i < n-1; i++)
-            Query = Query + globalSettings.columnHeaders[i] + ", ";
-        Query = Query + globalSettings.columnHeaders[n-1]
-                + " from " + globalSettings.mySQLServerTable;
+        for(int i = 0; i < n-1; i++) {
+            str.append(AppGlobalSettings.columnHeaders[i]);
+            str.append(", ");
+        }
+        str.append(AppGlobalSettings.columnHeaders[n-1]);
+        str.append(" from ");
+        str.append(AppGlobalSettings.mySQLServerTable);
+        Query = Query + str;
 
         // Open mySQL Connection and read Items
         try (Connection connection = DriverManager
-                .getConnection(globalSettings.mySQLServerURL, globalSettings.mySQLServerUser,
-                        globalSettings.mySQLServerPassword);
+                .getConnection(AppGlobalSettings.mySQLServerURL, AppGlobalSettings.mySQLServerUser,
+                        AppGlobalSettings.mySQLServerPassword);
 
              // Step 2:Create a statement using connection object
              Statement stmt = connection.createStatement();
@@ -250,10 +259,10 @@ public class ContactItem {
                 ContactItem ciItem = new ContactItem();
                 // ciArray = ContactItem.increaseCIArray(ciArray);
 
-                ciItem.setId(rs.getInt(globalSettings.columnHeaders[0]));
+                ciItem.setId(rs.getInt(AppGlobalSettings.columnHeaders[0]));
 
-                for(int i = 0; i < globalSettings.numberOfColumns-1; i++) {
-                    ciItem.setValueByIndex(i, rs.getString(globalSettings.columnHeaders[i+1]));
+                for(int i = 0; i < AppGlobalSettings.numberOfColumns-1; i++) {
+                    ciItem.setValueByIndex(i, rs.getString(AppGlobalSettings.columnHeaders[i+1]));
                     if(ciItem.getValueByIndex(i) == null){
                         ciItem.setValueByIndex(i, "");
                     }
@@ -275,28 +284,33 @@ public class ContactItem {
 
         // Export ContactsItems Array in the MySQL database
         if(ciArray == null){
-            System.out.println("There aren\'t new contacts in the input file. Nothing to do");
+            System.out.println("There aren't new contacts in the input file. Nothing to do");
             return;
         }
 
-        String QUERY = "insert into " + globalSettings.mySQLServerTable + " (";
+        String QUERY = "insert into " + AppGlobalSettings.mySQLServerTable + " (";
+        StringBuilder str = new StringBuilder();
 
-        int n = globalSettings.numberOfColumns;
+        int n = AppGlobalSettings.numberOfColumns;
+        for(int i = 0; i < n-1; i++) {
+            str.append(AppGlobalSettings.columnHeaders[i]);
+            str.append(", ");
+        }
+        str.append(AppGlobalSettings.columnHeaders[n-1]);
+        str.append(") " + "values (");
         for(int i = 0; i < n-1; i++)
-            QUERY = QUERY + globalSettings.columnHeaders[i] + ", ";
-        QUERY = QUERY + globalSettings.columnHeaders[n-1] + ") " + "values (";
-        for(int i = 0; i < n-1; i++)
-            QUERY = QUERY + "?,";
-        QUERY = QUERY +"?)";
+            str.append("?,");
+        str.append("?)");
+        QUERY = QUERY + str;
 
         // System.out.println("QUERY1= " + QUERY1);
 
         try {
             // Create MySQL database connection
             Connection conn = DriverManager
-                    .getConnection(globalSettings.mySQLServerURL,
-                            globalSettings.mySQLServerUser,
-                            globalSettings.mySQLServerPassword);
+                    .getConnection(AppGlobalSettings.mySQLServerURL,
+                            AppGlobalSettings.mySQLServerUser,
+                            AppGlobalSettings.mySQLServerPassword);
 
 
             for(int k = 0; k < ciArray.length; k++){
@@ -317,17 +331,17 @@ public class ContactItem {
         }
     }
 
-    public static void updateCIArrayToDB(ContactItem[] ciArray, AppGlobalSettings globalSettings){
+    public static void updateCIArrayToDB(ContactItem[] ciArray){
 
-        // Udate ContactsItems Array in the MySQL database
+        // Update ContactsItems Array in the MySQL database
         if(ciArray == null){
-            System.out.println("There aren\'t updated contacts in the input file. Nothing to do");
+            System.out.println("There aren't updated contacts in the input file. Nothing to do");
             return;
         }
 
-        String QUERY2 = "update " + globalSettings.mySQLServerTable + " set ";
+        String QUERY2 = "update " + AppGlobalSettings.mySQLServerTable + " set ";
 
-        int n = globalSettings.numberOfColumns;
+        int n = AppGlobalSettings.numberOfColumns;
         for(int i = 0; i < n-1; i++)
             QUERY2 = QUERY2 + ciArray[0].headers[i] + " = ?, ";
         QUERY2 = QUERY2 + ciArray[0].headers[n-1] + " = ? where " + ciArray[0].headers[0] + " = ?;";
@@ -337,9 +351,9 @@ public class ContactItem {
         try {
             // Create MySQL database connection
             Connection conn = DriverManager
-                    .getConnection(globalSettings.mySQLServerURL,
-                            globalSettings.mySQLServerUser,
-                            globalSettings.mySQLServerPassword);
+                    .getConnection(AppGlobalSettings.mySQLServerURL,
+                            AppGlobalSettings.mySQLServerUser,
+                            AppGlobalSettings.mySQLServerPassword);
 
 
             for(int k = 0; k < ciArray.length; k++){

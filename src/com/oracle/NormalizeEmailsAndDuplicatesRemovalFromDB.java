@@ -32,7 +32,7 @@ public class NormalizeEmailsAndDuplicatesRemovalFromDB {
         if(ciA.size() > 0){
             ciUpdateArray = new ContactItem[ciA.size()];
             ciA.toArray(ciUpdateArray);
-            ContactItem.updateCIArrayToDB(ciUpdateArray, globalSettings);
+            ContactItem.updateCIArrayToDB(ciUpdateArray);
         }else{
             System.out.println("All emails are already normalized, nothing to do");
         }

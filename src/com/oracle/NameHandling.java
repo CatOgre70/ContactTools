@@ -27,17 +27,19 @@ public class NameHandling {
         for(int i = 0; i < ciArray.length; i++) {
             if(ciArray[i].getValueByIndex(0).equals("")){
                 isFound = true;
-                String secondNameEng = "", firstNameEng = "", fullNameEng = "",
+                String secondNameEng, firstNameEng, fullNameEng,
                         secondNameRus = ciArray[i].getValueByIndex(3),
                         nameAndMiddlename = ciArray[i].getValueByIndex(4);
+
+                StringBuilder secondNameEngSB = new StringBuilder();
                 for(int j = 0; j < secondNameRus.length(); j++) {
-                    int charCode = (int) secondNameRus.charAt(j);
+                    int charCode = secondNameRus.charAt(j);
                     if((charCode >= 0x0410) & (charCode <= 0x044F))
-                        secondNameEng += TransLitTable[charCode-0x0410];
+                        secondNameEngSB.append(TransLitTable[charCode-0x0410]);
                     else if(charCode == 0x0401) // Ё character
-                        secondNameEng += "Yo";
+                        secondNameEngSB.append("Yo");
                     else if(charCode == 0x0451) // ё character
-                        secondNameEng += "yo";
+                        secondNameEngSB.append("yo");
                     else if(charCode == 32) // space character
                         continue;
                     else {
@@ -47,14 +49,17 @@ public class NameHandling {
                         return;
                     }
                 }
+                secondNameEng = secondNameEngSB.toString();
+
+                StringBuilder firstNameEngSB = new StringBuilder();
                 for(int j = 0; j < nameAndMiddlename.length(); j++) {
-                    int charCode = (int) nameAndMiddlename.charAt(j);
+                    int charCode = nameAndMiddlename.charAt(j);
                     if((charCode >= 0x0410) & (charCode <= 0x044F))
-                        firstNameEng += TransLitTable[charCode-0x0410];
+                        firstNameEngSB.append(TransLitTable[charCode-0x0410]);
                     else if(charCode == 0x0401) // Ё character
-                        firstNameEng += "Yo";
+                        firstNameEngSB.append("Yo");
                     else if(charCode == 0x0451) // ё character
-                        firstNameEng += "yo";
+                        firstNameEngSB.append("yo");
                     else if(charCode == 32) // space character
                         continue;
                     else {
@@ -64,14 +69,10 @@ public class NameHandling {
                         return;
                     }
                 }
+                firstNameEng = firstNameEngSB.toString();
 
                 fullNameEng = firstNameEng + " " + secondNameEng;
 
-/*
-                System.out.println("Сonverting from Russian to Transliteration result: " +
-                        nameAndMiddlename + " " + secondNameRus + " -> " +
-                        firstNameEng + " " + secondNameEng + " (" + fullNameEng + ")");
- */
                 ContactItem ci = new ContactItem();
                 ci.setId(ciArray[i].getId());
                 ci.setValueByIndex(0, secondNameEng);
@@ -95,7 +96,7 @@ public class NameHandling {
         ContactItem[] ciUpdateArray = new ContactItem[ciA.size()];
         ciA.toArray(ciUpdateArray);
 
-        ContactItem.updateCIArrayToDB(ciUpdateArray, globalSettings);
+        ContactItem.updateCIArrayToDB(ciUpdateArray);
 
     }
 
