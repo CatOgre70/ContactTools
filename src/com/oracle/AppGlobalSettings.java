@@ -125,7 +125,7 @@ public class AppGlobalSettings {
             }
 
             if(!iStrEqualitySign){
-                System.out.println("Error: There is no \"=\" sign in confoguration file string \n\"" + str.get(iStr) + "\", row #" + iStr);
+                System.out.println("Error: There is no \"=\" sign in configuration file string \n\"" + str.get(iStr) + "\", row #" + iStr);
                 return;
             } else
                 iStrEqualitySign = false;
