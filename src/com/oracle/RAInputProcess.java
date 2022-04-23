@@ -193,7 +193,7 @@ public class RAInputProcess {
         ContactItem.exportCIArrayToCSVfile(AppGlobalSettings.workingDirectory +
                 AppGlobalSettings.outputFile, ciNewArray);
 
-        // Analize new registration and attendance data, add new records to the raInputArray
+        // Analyze new registration and attendance data, add new records to the raInputArray
         // add changed records to the raUpdateArray
         ArrayList<RegistrationAttendance> raInArr = new ArrayList<>();
         ArrayList<RegistrationAttendance> raUpdArr = new ArrayList<>();
