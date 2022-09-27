@@ -13,18 +13,18 @@ public class NormalizeEmailsAndDuplicatesRemovalFromDB {
         globalSettings.ReadFromCNFfile();
 
         ArrayList<ContactItem> ciA = new ArrayList<>();
-        ContactItem[] ciUpdateArray = null;
+        ContactItem[] ciUpdateArray;
 
         // Read existing partner contact data from MySQL database
         ContactItem[] ciArray = ContactItem.readCIArrayFromDB(globalSettings);
 
         // Normalize emails in the ciArray and put the normalized into ciUpdateArray
-        for(int i = 0; i < ciArray.length; i++){
-            String initialEmail = ciArray[i].getValueByHeader("email");
-            ciArray[i].normalizeEmail();
-            if(!initialEmail.equals(ciArray[i].getValueByHeader("email"))) {
+        for (ContactItem contactItem : ciArray) {
+            String initialEmail = contactItem.getValueByHeader("email");
+            contactItem.normalizeEmail();
+            if (!initialEmail.equals(contactItem.getValueByHeader("email"))) {
                 ContactItem newCI = new ContactItem();
-                newCI.copy(ciArray[i]);
+                newCI.copy(contactItem);
                 ciA.add(newCI);
             }
         }
@@ -45,8 +45,8 @@ public class NormalizeEmailsAndDuplicatesRemovalFromDB {
 
         // Open mySQL Connection and read Items
         try (Connection connection = DriverManager
-                .getConnection(globalSettings.mySQLServerURL, globalSettings.mySQLServerUser,
-                        globalSettings.mySQLServerPassword);
+                .getConnection(AppGlobalSettings.mySQLServerURL, AppGlobalSettings.mySQLServerUser,
+                        AppGlobalSettings.mySQLServerPassword)
         ){
 
             for(int i = 0; i < ciArray.length; i++){
@@ -67,13 +67,13 @@ public class NormalizeEmailsAndDuplicatesRemovalFromDB {
                     ciA.toArray(ciUpdateArray);
 
                     // Prepare and change foreign keys in the RegAttDB
-                    for(int j = 0; j < ciUpdateArray.length; j++) {
+                    for (ContactItem contactItem : ciUpdateArray) {
                         // Array of Registration and Attendance Items
                         ArrayList<RegAttDB> raDBA = new ArrayList<>();
 
                         // Construct the query for MySQL
                         String Query = "select * from attend_reg_status where fk_id = "
-                                + ciUpdateArray[j].getId();
+                                + contactItem.getId();
                         // Create a statement using connection object
                         Statement stmt = connection.createStatement();
                         // Execute the query or update query
@@ -81,17 +81,17 @@ public class NormalizeEmailsAndDuplicatesRemovalFromDB {
                         // Step 4: Process the ResultSet object.
                         while (rs.next()) {
                             RegAttDB raDBItem = new RegAttDB();
-                            for(int k = 0; k < 5; k++) // 5 - number of RegAttDB columns
+                            for (int k = 0; k < 5; k++) // 5 - number of RegAttDB columns
                                 raDBItem.setValueByIndex(k, rs.getInt(RegAttDB.getHeaderByIndex(k)));
                             raDBA.add(raDBItem);
                         }
 
                         RegAttDB[] raUpdateDB = new RegAttDB[raDBA.size()];
                         raDBA.toArray(raUpdateDB);
-                        for(int k = 0; k < raUpdateDB.length; k++){
-                            raUpdateDB[k].setValueByIndex(2, ciArray[i].getId()); // Update fk_id field by first id represented in DB
+                        for (RegAttDB regAttDB : raUpdateDB) {
+                            regAttDB.setValueByIndex(2, ciArray[i].getId()); // Update fk_id field by first id represented in DB
                         }
-                        RegAttDB.updateRADBToMySQL(raUpdateDB, globalSettings);
+                        RegAttDB.updateRADBToMySQL(raUpdateDB);
 
                     }
                     // Delete dublicated contacts from SQL DB
@@ -104,8 +104,6 @@ public class NormalizeEmailsAndDuplicatesRemovalFromDB {
 
                 }
             }
-
-            connection.close();
 
         } catch (SQLException e){
             printSQLException(e);
