@@ -5,9 +5,9 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public class RegAttDB {
-    private static String headers[] = { "attendance_id", "fk_event_id",
+    private static final String[] headers = { "attendance_id", "fk_event_id",
             "fk_id", "registration_status", "attendance_status" };
-    private int regAttDB[];
+    private final int[] regAttDB;
 
     RegAttDB(){
         this.regAttDB = new int[5];
@@ -71,30 +71,34 @@ public class RegAttDB {
             System.out.println("Error in RegAttDB.setValueByHeader method: no such header");
     }
 
-    public static RegAttDB[] readRADBfromMySQL(AppGlobalSettings globalSettings){
+    public static RegAttDB[] readRADBfromMySQL(){
 
         // Array of Registration and Attendance Items
         ArrayList<RegAttDB> raDBA = new ArrayList<>();
 
         // Construct the query for MySQL
-        String Query = "select ";
+        StringBuilder str = new StringBuilder();
+        str.append("select ");
         int n = 5; // Number of columns in attend_reg_status DB table
 
-        for(int i = 0; i < n-1; i++)
-            Query = Query + RegAttDB.headers[i] + ", ";
-        Query = Query + RegAttDB.headers[n-1]
-                + " from attend_reg_status";
+        for(int i = 0; i < n-1; i++) {
+            str.append(RegAttDB.headers[i]);
+            str.append(", ");
+        }
+        str.append(RegAttDB.headers[n-1]);
+        str.append(" from attend_reg_status");
+        String query = str.toString();
 
         // Open mySQL Connection and read Items
         try (Connection connection = DriverManager
-                .getConnection(globalSettings.mySQLServerURL, globalSettings.mySQLServerUser,
-                        globalSettings.mySQLServerPassword);
+                .getConnection(AppGlobalSettings.mySQLServerURL, AppGlobalSettings.mySQLServerUser,
+                        AppGlobalSettings.mySQLServerPassword);
 
              // Step 2:Create a statement using connection object
              Statement stmt = connection.createStatement();
 
              // Step 3: Execute the query or update query
-             ResultSet rs = stmt.executeQuery(Query)) {
+             ResultSet rs = stmt.executeQuery(query)) {
 
             // Step 4: Process the ResultSet object.
 
@@ -115,38 +119,42 @@ public class RegAttDB {
 
     }
 
-    public static void writeRADBToMySQL(RegAttDB[] raInDB, AppGlobalSettings globalSettings){
+    public static void writeRADBToMySQL(RegAttDB[] raInDB){
         if(raInDB == null){
-            System.out.println("There aren\'t new registration data in the input file. Nothing to do");
+            System.out.println("There aren't new registration data in the input file. Nothing to do");
             return;
         }
 
-        String QUERY = "insert into attend_reg_status (";
+        StringBuilder str = new StringBuilder();
+        str.append("insert into attend_reg_status (");
 
         int n = 5; // Number of columns in the RegAttDB
-        for(int i = 0; i < n-1; i++)
-            QUERY = QUERY + RegAttDB.headers[i] + ", ";
-        QUERY = QUERY + RegAttDB.headers[n-1] + ") " + "values (";
-        for(int i = 0; i < n-1; i++)
-            QUERY = QUERY + "?,";
-        QUERY = QUERY +"?)";
+        for(int i = 0; i < n-1; i++) {
+            str.append(RegAttDB.headers[i]);
+            str.append(", ");
+        }
+        str.append(RegAttDB.headers[n-1]);
+        str.append(")  values (");
+        str.append("?,".repeat(n - 1));
+        str.append("?)");
+        String query = str.toString();
 
-        // System.out.println("QUERY1= " + QUERY);
+        // System.out.println("QUERY1= " + query);
 
         try {
             // Create MySQL database connection
             Connection conn = DriverManager
-                    .getConnection(globalSettings.mySQLServerURL,
-                            globalSettings.mySQLServerUser,
-                            globalSettings.mySQLServerPassword);
+                    .getConnection(AppGlobalSettings.mySQLServerURL,
+                            AppGlobalSettings.mySQLServerUser,
+                            AppGlobalSettings.mySQLServerPassword);
 
 
-            for(int k = 0; k < raInDB.length; k++){
-                // create the mysql insert preparedstatement
-                PreparedStatement preparedStmt = conn.prepareStatement(QUERY);
-                for(int i = 0; i < 5; i++)
-                    preparedStmt.setInt(i+1,raInDB[k].getValueByIndex(i));
-                // execute the preparedstatement
+            for (RegAttDB attDB : raInDB) {
+                // create the mysql insert prepared statement
+                PreparedStatement preparedStmt = conn.prepareStatement(query);
+                for (int i = 0; i < 5; i++)
+                    preparedStmt.setInt(i + 1, attDB.getValueByIndex(i));
+                // execute the prepared statement
                 preparedStmt.execute();
             }
 
@@ -157,36 +165,42 @@ public class RegAttDB {
         }
     }
 
-    public static void updateRADBToMySQL(RegAttDB[] raUpdDB, AppGlobalSettings globalSettings){
+    public static void updateRADBToMySQL(RegAttDB[] raUpdDB){
         if(raUpdDB == null){
-            System.out.println("There aren\'t changed registration data in the input file. Nothing to do");
+            System.out.println("There aren't changed registration data in the input file. Nothing to do");
             return;
         }
 
-        String QUERY = "update attend_reg_status set ";
-
+        StringBuilder str = new StringBuilder();
+        str.append("update attend_reg_status set ");
         int n = 5; // Number of columns in the RegAttDB
-        for(int i = 0; i < n-1; i++)
-            QUERY = QUERY + RegAttDB.headers[i] + " = ?, ";
-        QUERY = QUERY + RegAttDB.headers[n-1] + " = ? where " + RegAttDB.headers[0] + " = ?;";
+        for(int i = 0; i < n-1; i++) {
+            str.append(RegAttDB.headers[i]);
+            str.append(" = ?, ");
+        }
+        str.append(RegAttDB.headers[n-1]);
+        str.append(" = ? where ");
+        str.append(RegAttDB.headers[0]);
+        str.append(" = ?;");
+        String query = str.toString();
 
-        System.out.println("QUERY1= " + QUERY);
+        System.out.println("QUERY1= " + query);
 
         try {
             // Create MySQL database connection
             Connection conn = DriverManager
-                    .getConnection(globalSettings.mySQLServerURL,
-                            globalSettings.mySQLServerUser,
-                            globalSettings.mySQLServerPassword);
+                    .getConnection(AppGlobalSettings.mySQLServerURL,
+                            AppGlobalSettings.mySQLServerUser,
+                            AppGlobalSettings.mySQLServerPassword);
 
 
-            for(int k = 0; k < raUpdDB.length; k++){
-                // create the mysql insert preparedstatement
-                PreparedStatement preparedStmt = conn.prepareStatement(QUERY);
-                for(int i = 0; i < 5; i++)
-                    preparedStmt.setInt(i+1,raUpdDB[k].getValueByIndex(i));
-                preparedStmt.setInt(6, raUpdDB[k].getValueByIndex(0));
-                // execute the preparedstatement
+            for (RegAttDB attDB : raUpdDB) {
+                // create the mysql insert prepared statement
+                PreparedStatement preparedStmt = conn.prepareStatement(query);
+                for (int i = 0; i < 5; i++)
+                    preparedStmt.setInt(i + 1, attDB.getValueByIndex(i));
+                preparedStmt.setInt(6, attDB.getValueByIndex(0));
+                // execute the prepared statement
                 preparedStmt.executeUpdate();
             }
 
@@ -197,20 +211,13 @@ public class RegAttDB {
         }
     }
 
-    public void print(){
-        String str = "";
-
-        for(int i = 0; i <5 ; i++)
-            str = str + this.regAttDB[i] + ", ";
-
-        System.out.print(str);
-    }
-
     public void println(){
-        String str = "";
+        StringBuilder str = new StringBuilder();
 
-        for(int i = 0; i <5 ; i++)
-            str = str + this.regAttDB[i] + ", ";
+        for(int i = 0; i <5 ; i++) {
+            str.append(this.regAttDB[i]);
+            str.append(", ");
+        }
 
         System.out.println(str);
     }

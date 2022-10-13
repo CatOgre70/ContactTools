@@ -23,7 +23,7 @@ public class RAInputProcess {
         EventItem[] eventArray = EventItem.ReadEventListFromDB();
 
         // Read existing registration and attendance data from MySQL database
-        RegAttDB[] raDB = RegAttDB.readRADBfromMySQL(globalSettings);
+        RegAttDB[] raDB = RegAttDB.readRADBfromMySQL();
 
         // Define free index set for ciArray: nextIDAfterMax & availableIDsArray[]
         int nextIDAfterMax = 0;
@@ -281,7 +281,7 @@ public class RAInputProcess {
                 raInDB[i].setValueByIndex(3, raInputArray[i].getRegistration());
                 raInDB[i].setValueByIndex(4, raInputArray[i].getAttendance());
             }
-            RegAttDB.writeRADBToMySQL(raInDB, globalSettings);
+            RegAttDB.writeRADBToMySQL(raInDB);
         } else {
             System.out.println("There aren't new registration and attendance data in the input file. Nothing to do");
         }
@@ -297,13 +297,13 @@ public class RAInputProcess {
                 raUpdDB[i].setValueByIndex(3, raUpdateArray[i].getRegistration());
                 raUpdDB[i].setValueByIndex(4, raUpdateArray[i].getAttendance());
             }
-            RegAttDB.updateRADBToMySQL(raUpdDB, globalSettings);
+            RegAttDB.updateRADBToMySQL(raUpdDB);
         } else {
             System.out.println("There aren't updated registration and attendance data in the input file. Nothing to do");
         }
 
         // Read final registration and attendance data from MySQL database
-        raDB = RegAttDB.readRADBfromMySQL(globalSettings);
+        raDB = RegAttDB.readRADBfromMySQL();
 
         // Export new contacts registration and attendance information into CSV file
 
